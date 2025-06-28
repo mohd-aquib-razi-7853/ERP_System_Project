@@ -378,5 +378,4 @@ export interface AuditLog {
   module: string;
   timestamp: Date;
   metadata?: Record<string, any>;
-  
 }
