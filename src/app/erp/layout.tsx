@@ -1,0 +1,148 @@
+import React from "react";
+import { ERPSidebar } from "@/components/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { ContactRound, Home, Landmark, LayoutDashboard, LineChart, Settings, Users, Warehouse } from "lucide-react";
+const erpSidebarItems = [
+  {
+    title: "Dashboard",
+    url: "/erp/dashboard",
+    icon: LayoutDashboard,
+    isActive: false, // Added missing property
+    badge: undefined, // Explicitly undefined (optional)
+  },
+  {
+    title: "Inventory",
+    url: "/erp/inventory",
+    icon: Warehouse,
+    isActive: false,
+    badge: "3", // Example badge
+    subItems: [
+      { 
+        title: "Stock Levels", 
+        url: "/erp/inventory/levels",
+        isActive: false 
+      },
+      { 
+        title: "Suppliers", 
+        url: "/erp/inventory/suppliers",
+        isActive: false 
+      },
+      { 
+        title: "Purchase Orders", 
+        url: "/erp/inventory/orders",
+        isActive: true 
+      }
+    ]
+  },
+  {
+    title: "Accounting",
+    url: "/erp/accounting",
+    icon: Landmark,
+    isActive: false,
+    subItems: [
+      { 
+        title: "Invoices", 
+        url: "/erp/accounting/invoices",
+        isActive: false 
+      },
+      { 
+        title: "Payments", 
+        url: "/erp/accounting/payments",
+        isActive: false 
+      },
+      { 
+        title: "Expenses", 
+        url: "/erp/accounting/expenses",
+        isActive: false 
+      }
+    ]
+  },
+  {
+    title: "Human Resources",
+    url: "/erp/hr",
+    icon: Users,
+    isActive: false,
+    subItems: [
+      { 
+        title: "Employees", 
+        url: "/erp/hr/employees",
+        isActive: false 
+      },
+      { 
+        title: "Payroll", 
+        url: "/erp/hr/payroll",
+        isActive: false 
+      },
+      { 
+        title: "Leave Management", 
+        url: "/erp/hr/leave",
+        isActive: false 
+      }
+    ]
+  },
+  {
+    title: "CRM",
+    url: "/erp/crm",
+    icon: ContactRound,
+    isActive: false,
+    subItems: [
+      { 
+        title: "Clients", 
+        url: "/erp/crm/clients",
+        isActive: false 
+      },
+      { 
+        title: "Leads", 
+        url: "/erp/crm/leads",
+        isActive: false 
+      },
+      { 
+        title: "Contracts", 
+        url: "/erp/crm/contracts",
+        isActive: false 
+      }
+    ]
+  },
+  {
+    title: "Reports",
+    url: "/erp/reports",
+    icon: LineChart,
+    isActive: false,
+    badge: "New"
+  },
+  {
+    title: "Admin",
+    url: "/erp/admin",
+    icon: Settings,
+    isActive: false,
+    subItems: [
+      { 
+        title: "Users", 
+        url: "/erp/admin/users",
+        isActive: false 
+      },
+      { 
+        title: "Roles", 
+        url: "/erp/admin/roles",
+        isActive: false 
+      },
+      { 
+        title: "System Settings", 
+        url: "/erp/admin/settings",
+        isActive: false 
+      }
+    ]
+  }
+];
+const MainRootLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <SidebarProvider>
+      <ERPSidebar items={erpSidebarItems}/>
+      <main>
+        {children}
+      </main>
+    </SidebarProvider>
+  );
+};
+
+export default MainRootLayout;
