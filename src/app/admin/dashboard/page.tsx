@@ -722,7 +722,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="max-h-screen h-full overflow-scroll overflow-x-hidden bg-[#111827] text-gray-100 p-4 md:p-6 space-y-6"
+      className="max-h-screen h-full overflow-scroll overflow-x-hidden bg-[#111827] text-gray-100 p-4 md:p-6 space-y-6 no-scrollbar"
       initial="hidden"
       animate="show"
       variants={containerVariants}
@@ -883,8 +883,8 @@ const Dashboard: React.FC = () => {
         className="grid gap-6 md:grid-cols-1 lg:grid-cols-2"
         variants={containerVariants}
       >
-        <RecentOrders className="bg-gray-800/50 border-gray-700" />
-        <TopProducts className="bg-gray-800/50 border-gray-700" />
+        <RecentOrders className="bg-gray-800/50 border-gray-700 max-h-ful h-full overflow-scroll no-scrollbar" />
+        <TopProducts className="bg-gray-800/50 border-gray-700 max-h-ful h-full overflow-scroll no-scrollbar" />
       </motion.div>
     </motion.div>
   );
