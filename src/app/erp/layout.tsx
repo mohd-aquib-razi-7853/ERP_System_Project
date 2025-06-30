@@ -2,18 +2,17 @@ import React from "react";
 import { ERPSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ContactRound, Home, Landmark, LayoutDashboard, LineChart, Settings, Users, Warehouse } from "lucide-react";
-const erpSidebarItems = [
+import { MenuItem } from "@/type";
+const erpSidebarItems:MenuItem[] = [
   {
     title: "Dashboard",
     url: "/erp/dashboard",
-    icon: LayoutDashboard,
     isActive: false, // Added missing property
     badge: undefined, // Explicitly undefined (optional)
   },
   {
     title: "Inventory",
     url: "/erp/inventory",
-    icon: Warehouse,
     isActive: false,
     badge: "3", // Example badge
     subItems: [
@@ -37,7 +36,6 @@ const erpSidebarItems = [
   {
     title: "Accounting",
     url: "/erp/accounting",
-    icon: Landmark,
     isActive: false,
     subItems: [
       { 
@@ -60,7 +58,6 @@ const erpSidebarItems = [
   {
     title: "Human Resources",
     url: "/erp/hr",
-    icon: Users,
     isActive: false,
     subItems: [
       { 
@@ -83,7 +80,6 @@ const erpSidebarItems = [
   {
     title: "CRM",
     url: "/erp/crm",
-    icon: ContactRound,
     isActive: false,
     subItems: [
       { 
@@ -106,14 +102,12 @@ const erpSidebarItems = [
   {
     title: "Reports",
     url: "/erp/reports",
-    icon: LineChart,
     isActive: false,
     badge: "New"
   },
   {
     title: "Admin",
     url: "/erp/admin",
-    icon: Settings,
     isActive: false,
     subItems: [
       { 

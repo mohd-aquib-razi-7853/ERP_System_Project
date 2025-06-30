@@ -1,11 +1,16 @@
-import React from 'react'
+import AdminSidebar from "@/components/admin-sidebar";
+import { AnimatePresence } from "framer-motion";
+import React from "react";
 
-const AdminLayoutPage = ({children}:{children:React.ReactNode}) => {
+const AdminLayoutPage = ({ children }: { children: React.ReactNode }) => {
   return (
-    <main className='w-full min-h-screen'>
-        {children}
-    </main>
-  )
-}
+      <div className="flex max-h-screen h-full">
+        <AdminSidebar />
+        <main className="flex-1  bg-[#111827] dark:bg-gray-900">
+          {children}
+        </main>
+      </div>
+  );
+};
 
-export default AdminLayoutPage
+export default AdminLayoutPage;

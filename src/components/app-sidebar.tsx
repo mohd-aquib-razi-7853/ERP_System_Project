@@ -67,12 +67,12 @@ export function ERPSidebar({ items }: { items: MenuItem[] }) {
                         )}
                       >
                         <div className="flex items-center gap-3">
-                          <item.icon
+                          {/* <item.icon
                             className={cn(
                               "w-5 h-5 transition-colors",
                               item.isActive ? "text-sidebar-primary-foreground" : "text-current"
                             )}
-                          />
+                          /> */}
                           <span className="font-medium">
                             {item.title}
                           </span>
