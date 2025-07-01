@@ -6,16 +6,14 @@ import {
   ShoppingCart,
   Package,
   BarChart2,
-  MessageSquare,
   Settings,
   LogIn,
   ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -95,18 +93,32 @@ export default function AdminSidebar() {
       ]
     },
     {
-      title: "Messages",
-      icon: <MessageSquare size={18} />,
-      path: "/admin/messages",
-      singleItem: true
-    },
-    {
       title: "Settings",
       icon: <Settings size={18} />,
       path: "/admin/settings",
       singleItem: true
     }
   ], []);
+
+  // Automatically open sections when their sub-items are active
+  useEffect(() => {
+    const newOpenSections = { ...openSections };
+    let hasChanges = false;
+
+    menuSections.forEach(section => {
+      if (section.key && section.subItems) {
+        const isActive = section.subItems.some(item => pathname.startsWith(item.path));
+        if (isActive && !openSections[section.key as keyof typeof openSections]) {
+          newOpenSections[section.key as keyof typeof openSections] = true;
+          hasChanges = true;
+        }
+      }
+    });
+
+    if (hasChanges) {
+      setOpenSections(newOpenSections);
+    }
+  }, [pathname, menuSections]);
 
   const toggleSection = (section: string) => {
     setOpenSections(prev => ({
@@ -117,7 +129,7 @@ export default function AdminSidebar() {
 
   const isActive = (href: string) => pathname === href;
   const isActiveSection = (path: string, subItems?: { path: string }[]) => {
-    return isActive(path) || (subItems?.some(item => pathname.startsWith(item.path)) || false)
+    return isActive(path) || (subItems?.some(item => pathname.startsWith(item.path)) || false);
   };
 
   return (
@@ -159,8 +171,8 @@ export default function AdminSidebar() {
                   <Link
                     href={section.path}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition",
-                      isActive(section.path) ? "bg-teal-500 text-white font-semibold" : "text-gray-400"
+                      "flex items-center gap-3 px-4 py-2 rounded-md text-sm hover:text-white hover:bg-gray-800 transition",
+                      isActive(section.path) ? "bg-teal-600 text-white font-semibold" : "text-gray-400"
                     )}
                   >
                     <motion.span whileHover={{ scale: 1.05 }}>
@@ -188,7 +200,7 @@ export default function AdminSidebar() {
                       variant="ghost"
                       className={cn(
                         "w-full justify-between px-4 py-2 rounded-md text-sm hover:bg-gray-800 hover:text-white transition-all",
-                        isActiveSection(section.path, section.subItems) ? "bg-gray-800" : "opacity-50 hover:opacity-100"
+                        isActiveSection(section.path, section.subItems) ? "bg-teal-800" : "opacity-50 hover:opacity-100"
                       )}
                     >
                       <div className="flex items-center gap-3">

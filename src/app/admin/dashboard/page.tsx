@@ -326,7 +326,7 @@ const Dashboard: React.FC = () => {
       textStyle: {
         color: '#94a3b8',
         fontFamily: 'Inter, sans-serif',
-        fontWeight: '500'
+        // fontWeight: '500'
       },
       right: 24,
       top: 12,
@@ -507,7 +507,7 @@ const Dashboard: React.FC = () => {
           label: {
             show: true,
             fontSize: 14,
-            fontWeight: '500',
+            // fontWeight: '500',
             color: '#f8fafc',
             formatter: '{b}\n{d}%'
           }
@@ -596,7 +596,7 @@ const Dashboard: React.FC = () => {
       textStyle: {
         color: '#94a3b8',
         fontFamily: 'Inter, sans-serif',
-        fontWeight: '500',
+        // fontWeight: "500",
       },
       right: 20,
       top: 10,
