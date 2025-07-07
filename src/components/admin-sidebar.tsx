@@ -77,7 +77,7 @@ export default function AdminSidebar() {
       path: "/admin/products",
       subItems: [
         { title: "Products", path: "/admin/products" },
-        { title: "Stock Management", path: "/admin/inventory" },
+        { title: "Stock Management", path: "/admin/stock-mng" },
         { title: "Suppliers", path: "/admin/suppliers" }
       ]
     },

@@ -187,7 +187,7 @@ export default function AddEmployeePage() {
           <Button 
             variant="ghost" 
             onClick={() => router.back()}
-            className="mb-6 hover:bg-gray-800/50 group transition-all"
+            className="mb-6 hover:bg-gray-800/50 group transition-all hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Users
