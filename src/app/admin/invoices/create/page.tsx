@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -52,7 +52,7 @@ const InvoiceCreatePage = () => {
     summary: true
   });
 
-  const { register, handleSubmit, formState: { errors }, control, setValue, watch, trigger } = useForm<Invoice>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch, trigger } = useForm<Invoice>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       invoiceNumber: `INV-${Math.floor(Math.random() * 10000)}`,
@@ -393,7 +393,7 @@ const InvoiceCreatePage = () => {
                           exit={{ opacity: 0 }}
                           className="p-4 text-center text-gray-500 dark:text-gray-400"
                         >
-                          No items added yet. Click "Add Item" to get started.
+                          No items added yet. Click &ldquo;Add Item&ldquo; to get started.
                         </motion.div>
                       ) : (
                         <Table>

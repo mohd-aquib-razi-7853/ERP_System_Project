@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,12 +30,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
-
-export default function InvoiceDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+interface PageProps {
+  params: {
+    id: string;
+  };
+  searchParams?: {
+    [key: string]: string | string[] | undefined;
+  };
+}
+export default function InvoiceDetailPage({ params }: PageProps) {
   // Mock invoice data
   const invoice = {
     id: params.id,
@@ -80,7 +83,7 @@ export default function InvoiceDetailPage({
       "Thank you for your business. Please contact support@erp.com for any assistance.",
   };
 
-  const router = useRouter()
+  const router = useRouter();
   const statusVariant =
     invoice.status === "paid"
       ? "default"
