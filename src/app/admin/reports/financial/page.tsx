@@ -13,14 +13,11 @@ import {
   LineChart,
   PieChart,
   BarChart2,
-  TrendingUp,
   Wallet,
   Banknote,
   Percent,
   Download,
   Calendar as CalendarIcon,
-  Filter,
-  MoreVertical,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
@@ -39,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, subDays, subMonths, subYears, startOfYear, endOfYear } from 'date-fns';
+import { format, subDays, subMonths,  startOfYear, endOfYear } from 'date-fns';
 
 // Types
 type MetricCardProps = {
@@ -171,7 +168,7 @@ const generateRevenueData = (range: TimeRange, dateRange?: DateRange) => {
   } else if (range === '30d') {
     // Weekly data for 30 days (4 weeks)
     for (let i = 3; i >= 0; i--) {
-      const weekStart = subDays(now, i * 7);
+      // const weekStart = subDays(now, i * 7);
       data.push({
         quarter: `Week ${4 - i}`,
         revenue: Math.round(150000 + Math.random() * 100000),
@@ -238,7 +235,7 @@ const generateExpenseData = () => {
 };
 
 const generateHealthData = (range: TimeRange) => {
-  let data: { month: string; grossMargin: number; operatingMargin: number; netMargin: number }[] = [];
+  const data: { month: string; grossMargin: number; operatingMargin: number; netMargin: number }[] = [];
   const now = new Date();
 
   if (range === '7d' || range === '30d') {
@@ -753,10 +750,10 @@ const FinanceReportPage = () => {
   };
 
   // Handle export
-  const handleExport = (type: 'pdf' | 'csv') => {
-    // In a real app, this would generate and download the file
-    alert(`Exporting ${type.toUpperCase()} report for ${formatDateRange()}`);
-  };
+  // const handleExport = (type: 'pdf' | 'csv') => {
+  //   // In a real app, this would generate and download the file
+  //   alert(`Exporting ${type.toUpperCase()} report for ${formatDateRange()}`);
+  // };
 
   return (
     <motion.div
@@ -785,7 +782,7 @@ const FinanceReportPage = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            Comprehensive overview of your company's financial performance
+            Comprehensive overview of your company&apos;s financial performance
           </motion.p>
         </div>
         <motion.div
