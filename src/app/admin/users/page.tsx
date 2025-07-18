@@ -15,8 +15,6 @@ import {
   ChevronRight,
   MoreVertical,
   Shield,
-  Mail,
-  Lock,
   Check,
   X,
   Clock

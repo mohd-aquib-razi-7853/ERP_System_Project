@@ -14,9 +14,8 @@ import {
   Landmark,
   ChevronDown,
   ChevronUp,
-  LucideProps
 } from "lucide-react";
-import { ForwardRefExoticComponent, RefAttributes, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";

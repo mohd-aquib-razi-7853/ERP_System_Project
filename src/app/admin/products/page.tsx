@@ -1,185 +1,304 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Pencil, Trash2, Eye, Plus, Search, Box, AlertCircle } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useState } from "react";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  Search,
+  Box,
+  AlertCircle,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+// Define the Zod schema for product form validation
+const productSchema = z.object({
+  name: z.string().min(1, "Product name is required"),
+  sku: z.string().min(1, "SKU is required"),
+  price: z.string().regex(/^₹\d{1,3}(,\d{3})*(\.\d{1,2})?$/, "Invalid price format"),
+  stock: z.string().regex(/^\d+$/, "Stock must be a non-negative integer").transform((val) => parseInt(val, 10)),
+  category: z.string().min(1, "Category is required"),
+});
+
+type ProductType = {
+  id: number;
+  name: string;
+  sku: string;
+  price: string;
+  stock: number;
+  category: string;
+  image: string;
+};
 
 export default function ProductPage() {
-  const [products, setProducts] = useState([
-    { id: 1, name: "MacBook Pro 16\"", sku: "LP123", price: "₹1,50,000", stock: 10, category: "Electronics", image: "/macbook-pro.jpg" },
-    { id: 2, name: "Wireless Mouse", sku: "MS234", price: "₹1,200", stock: 50, category: "Accessories", image: "/mouse.jpg" },
-    { id: 3, name: "Mechanical Keyboard", sku: "KB345", price: "₹5,500", stock: 25, category: "Accessories", image: "/keyboard.jpg" },
-    { id: 4, name: "4K Monitor", sku: "MN456", price: "₹35,000", stock: 8, category: "Electronics", image: "/monitor.jpg" }
-  ])
+  const [products, setProducts] = useState<ProductType[]>([
+    {
+      id: 1,
+      name: 'MacBook Pro 16"',
+      sku: "LP123",
+      price: "₹1,50,000",
+      stock: 10,
+      category: "Electronics",
+      image: "/macbook-pro.jpg",
+    },
+    {
+      id: 2,
+      name: "Wireless Mouse",
+      sku: "MS234",
+      price: "₹1,200",
+      stock: 50,
+      category: "Accessories",
+      image: "/mouse.jpg",
+    },
+    {
+      id: 3,
+      name: "Mechanical Keyboard",
+      sku: "KB345",
+      price: "₹5,500",
+      stock: 25,
+      category: "Accessories",
+      image: "/keyboard.jpg",
+    },
+    {
+      id: 4,
+      name: "4K Monitor",
+      sku: "MN456",
+      price: "₹35,000",
+      stock: 8,
+      category: "Electronics",
+      image: "/monitor.jpg",
+    },
+  ]);
 
-  const [form, setForm] = useState({ id: null, name: '', sku: '', price: '', stock: '', category: '' })
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [productToDelete, setProductToDelete] = useState(null)
+  const [form, setForm] = useState({
+    id: null as number | null,
+    name: "",
+    sku: "",
+    price: "",
+    stock: "",
+    category: "",
+  });
+  const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleAddProduct = () => {
-    if (form.id) {
-      // Update existing product
-      setProducts(products.map(p => 
-        p.id === form.id ? { 
-          ...p, 
-          name: form.name,
-          sku: form.sku,
-          price: form.price,
-          stock: parseInt(form.stock),
-          category: form.category
-        } : p
-      ))
-    } else {
-      // Add new product
-      const newProduct = {
-        ...form,
-        id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
-        stock: parseInt(form.stock),
-        image: "/placeholder-product.jpg"
-      }
-      setProducts([...products, newProduct])
+    const formData = {
+      name: form.name,
+      sku: form.sku,
+      price: form.price,
+      stock: form.stock,
+      category: form.category,
+    };
+    const result = productSchema.safeParse(formData);
+    if (!result.success) {
+      setErrors(result.error.flatten().fieldErrors);
+      return;
     }
-    resetForm()
-    setIsDialogOpen(false)
-  }
 
-  const handleEdit = (product:any) => {
+    if (form.id) {
+      setProducts(
+        products.map((p) =>
+          p.id === form.id
+            ? {
+                ...p,
+                name: result.data.name,
+                sku: result.data.sku,
+                price: result.data.price,
+                stock: result.data.stock,
+                category: result.data.category,
+              }
+            : p
+        )
+      );
+    } else {
+      const newProduct = {
+        id: products.length > 0 ? Math.max(...products.map((p) => p.id)) + 1 : 1,
+        name: result.data.name,
+        sku: result.data.sku,
+        price: result.data.price,
+        stock: result.data.stock,
+        category: result.data.category,
+        image: "/placeholder-product.jpg",
+      };
+      setProducts([...products, newProduct]);
+    }
+    resetForm();
+    setIsDialogOpen(false);
+    setErrors({});
+  };
+
+  const handleEdit = (product: ProductType) => {
     setForm({
       id: product.id,
       name: product.name,
       sku: product.sku,
       price: product.price,
       stock: product.stock.toString(),
-      category: product.category
-    })
-    setIsDialogOpen(true)
-  }
+      category: product.category,
+    });
+    setIsDialogOpen(true);
+  };
 
-  const handleDelete = (id:any) => {
-    setProducts(products.filter(p => p.id !== id))
-    setIsDeleteDialogOpen(false)
-  }
+  const handleDelete = (id: number) => {
+    setProducts(products.filter((p) => p.id !== id));
+    setIsDeleteDialogOpen(false);
+  };
 
   const resetForm = () => {
-    setForm({ id: null, name: '', sku: '', price: '', stock: '', category: '' })
-  }
+    setForm({
+      id: null,
+      name: "",
+      sku: "",
+      price: "",
+      stock: "",
+      category: "",
+    });
+  };
 
-  // Calculate inventory summary
-  const totalProducts = products.length
-  const totalStock = products.reduce((sum, product) => sum + product.stock, 0)
-  const outOfStock = products.filter(p => p.stock === 0).length
+  const totalProducts = products.length;
+  const totalStock = products.reduce((sum, product) => sum + product.stock, 0);
+  const outOfStock = products.filter((p) => p.stock === 0).length;
 
   return (
-    <div className="p-6 space-y-6 bg-gray-900 text-white min-h-screen">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    <div className="p-8 space-y-8 bg-gray-950 text-white min-h-screen font-['Inter',sans-serif]">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Product Inventory</h2>
-          <p className="text-muted-foreground">Manage your products and stock levels</p>
+          <h2 className="text-4xl font-bold tracking-tight text-amber-500">
+            Product Inventory
+          </h2>
+          <p className="text-gray-300 mt-1">
+            Exquisite Management for Exclusive Assets
+          </p>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500" />
             <Input
-              placeholder="Search products..."
-              className="pl-9 w-full md:w-[300px] bg-gray-800 border-gray-700 text-white"
+              placeholder="Search your exclusive collection..."
+              className="pl-10 w-full md:w-[320px] bg-gray-900 border-gray-700 text-white focus:border-amber-500 transition-all duration-300 rounded-lg"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            if (!open) resetForm()
-            setIsDialogOpen(open)
-          }}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              if (open) setErrors({});
+              else resetForm();
+              setIsDialogOpen(open);
+            }}
+          >
             <DialogTrigger asChild>
-              <Button className="flex gap-2 bg-blue-600 hover:bg-blue-700">
-                <Plus size={18} /> Add Product
+              <Button className="flex gap-2 bg-amber-600 hover:bg-amber-700 hover:scale-105 transition-transform duration-200 shadow-md">
+                <Plus size={20} /> Add Exclusive Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 text-white">
+            <DialogContent className="sm:max-w-[600px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl">
-                  {form.id ? 'Edit Product' : 'Add New Product'}
+                <DialogTitle className="text-2xl text-amber-500">
+                  {form.id ? "Refine Item Details" : "Curate New Luxury Item"}
                 </DialogTitle>
               </DialogHeader>
-              <div className="grid gap-4 py-4 grid-cols-1 sm:grid-cols-2">
+              <div className="grid gap-6 py-6 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Product Name</label>
-                  <Input 
-                    placeholder="MacBook Pro 16\"
-                    value={form.name} 
-                    onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="bg-gray-700 border-gray-600 text-white"
+                  <label className="text-sm font-medium text-gray-200">Item Name</label>
+                  <Input
+                    placeholder='MacBook Pro 16"'
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   />
+                  {errors.name && <p className="text-red-500 text-sm">{errors.name[0]}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">SKU</label>
-                  <Input 
-                    placeholder="LP123" 
-                    value={form.sku} 
-                    onChange={e => setForm({ ...form, sku: e.target.value })}
-                    className="bg-gray-700 border-gray-600 text-white"
+                  <label className="text-sm font-medium text-gray-200">SKU</label>
+                  <Input
+                    placeholder="LP123"
+                    value={form.sku}
+                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   />
+                  {errors.sku && <p className="text-red-500 text-sm">{errors.sku[0]}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Price</label>
-                  <Input 
-                    placeholder="₹1,50,000" 
-                    value={form.price} 
-                    onChange={e => setForm({ ...form, price: e.target.value })}
-                    className="bg-gray-700 border-gray-600 text-white"
+                  <label className="text-sm font-medium text-gray-200">Price</label>
+                  <Input
+                    placeholder="₹1,50,000"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   />
+                  {errors.price && <p className="text-red-500 text-sm">{errors.price[0]}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Stock Quantity</label>
-                  <Input 
-                    type="number" 
-                    placeholder="10" 
-                    value={form.stock} 
-                    onChange={e => setForm({ ...form, stock: e.target.value })}
-                    className="bg-gray-700 border-gray-600 text-white"
+                  <label className="text-sm font-medium text-gray-200">Stock Quantity</label>
+                  <Input
+                    type="number"
+                    placeholder="10"
+                    value={form.stock}
+                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   />
+                  {errors.stock && <p className="text-red-500 text-sm">{errors.stock[0]}</p>}
                 </div>
                 <div className="space-y-2 sm:col-span-2">
-                  <label className="text-sm font-medium">Category</label>
-                  <Input 
-                    placeholder="Electronics" 
-                    value={form.category} 
-                    onChange={e => setForm({ ...form, category: e.target.value })}
-                    className="bg-gray-700 border-gray-600 text-white"
+                  <label className="text-sm font-medium text-gray-200">Category</label>
+                  <Input
+                    placeholder="Electronics"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   />
+                  {errors.category && <p className="text-red-500 text-sm">{errors.category[0]}</p>}
                 </div>
               </div>
               <DialogFooter>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
-                    resetForm()
-                    setIsDialogOpen(false)
+                    resetForm();
+                    setIsDialogOpen(false);
                   }}
-                  className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+                  className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 transition-colors duration-200"
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={handleAddProduct}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-amber-600 hover:bg-amber-700 hover:scale-105 transition-transform duration-200"
                 >
-                  {form.id ? 'Update Product' : 'Add Product'}
+                  {form.id ? "Update Item" : "Add Item"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -188,104 +307,118 @@ export default function ProductPage() {
       </div>
 
       {/* Inventory Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="hover:shadow-md transition-shadow bg-gray-800 border-gray-700">
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transição-all duration-300 rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Plus className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-200">Total Assets</CardTitle>
+            <Plus className="h-5 w-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalProducts}</div>
-            <p className="text-xs text-muted-foreground">+2 from last month</p>
+            <div className="text-3xl font-bold text-amber-500">{totalProducts}</div>
+            <p className="text-xs text-gray-400">+2 from last month</p>
           </CardContent>
         </Card>
-        <Card className="hover:shadow-md transition-shadow bg-gray-800 border-gray-700">
+        <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transição-all duration-300 rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Inventory</CardTitle>
-            <Box className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-200">Inventory Volume</CardTitle>
+            <Box className="h-5 w-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalStock}</div>
-            <p className="text-xs text-muted-foreground">+120 from last month</p>
+            <div className="text-3xl font-bold text-amber-500">{totalStock}</div>
+            <p className="text-xs text-gray-400">+120 from last month</p>
           </CardContent>
         </Card>
-        <Card className="hover:shadow-md transition-shadow bg-gray-800 border-gray-700">
+        <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transição-all duration-300 rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-200">Out of Stock</CardTitle>
+            <AlertCircle className="h-5 w-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{outOfStock}</div>
-            <p className="text-xs text-muted-foreground">+1 from last month</p>
+            <div className="text-3xl font-bold text-amber-500">{outOfStock}</div>
+            <p className="text-xs text-gray-400">+1 from last month</p>
           </CardContent>
         </Card>
       </div>
 
+      <hr className="my-8 border-gray-800" />
+
       {/* Products Table */}
-      <Card className="border-none shadow-sm bg-gray-800 border-gray-700">
+      <Card className="border-none bg-gray-900 text-white shadow-lg rounded-xl">
         <Table>
-          <TableHeader className="bg-gray-700">
-            <TableRow>
-              <TableHead className="w-[100px]">Image</TableHead>
-              <TableHead>Product</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+          <TableHeader>
+            <TableRow className="border-b border-gray-700 hover:bg-gray-900">
+              <TableHead className="w-[100px] text-gray-300 font-semibold">Image</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Item</TableHead>
+              <TableHead className="text-gray-300 font-semibold">SKU</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Price</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Stock</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Category</TableHead>
+              <TableHead className="text-right text-gray-300 font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProducts.map((product) => (
-              <TableRow key={product.id} className="hover:bg-gray-700/50 border-gray-700">
+              <TableRow
+                key={product.id}
+                className="hover:bg-gray-800 transition-colors duration-200 border-b border-gray-800"
+              >
                 <TableCell>
-                  <Avatar className="h-10 w-10 rounded-md">
+                  <Avatar className="h-12 w-12 rounded-md ring-2 ring-amber-500 hover:ring-amber-400 transition-all duration-200">
                     <AvatarImage src={product.image} alt={product.name} />
-                    <AvatarFallback className="bg-gray-600">
+                    <AvatarFallback className="bg-gray-700 text-amber-500">
                       {product.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell className="font-medium text-gray-100">{product.name}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="bg-gray-700 border-gray-600">
+                  <Badge
+                    variant="outline"
+                    className="bg-gray-800 border-gray-600 text-amber-500"
+                  >
                     {product.sku}
                   </Badge>
                 </TableCell>
-                <TableCell>{product.price}</TableCell>
+                <TableCell className="text-gray-100">{product.price}</TableCell>
                 <TableCell>
-                  <Badge 
+                  <Badge
                     variant={product.stock < 5 ? "destructive" : "default"}
-                    className="px-2 py-1 text-xs"
+                    className="px-2 py-1 text-xs bg-gray-800 border-gray-600 text-gray-100"
                   >
                     {product.stock} in stock
+                    {product.stock < 5 && product.stock > 0 && (
+                      <AlertCircle className="h-3 w-3 ml-1 text-red-500" />
+                    )}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className="bg-gray-600">
+                  <Badge
+                    variant="secondary"
+                    className="bg-gray-700 text-amber-500"
+                  >
                     {product.category}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 hover:bg-gray-700"
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 hover:bg-gray-700 hover:text-amber-400 transition-colors duration-200"
                       onClick={() => handleEdit(product)}
                     >
-                      <Pencil className="h-4 w-4 text-blue-400" />
+                      <Pencil className="h-5 w-5 text-amber-500" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 hover:bg-gray-700"
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 hover:bg-gray-700 hover:text-red-400 transition-colors duration-200"
                       onClick={() => {
-                        setProductToDelete(product.id)
-                        setIsDeleteDialogOpen(true)
+                        setProductToDelete(product.id);
+                        setIsDeleteDialogOpen(true);
                       }}
                     >
-                      <Trash2 className="h-4 w-4 text-red-400" />
+                      <Trash2 className="h-5 w-5 text-red-500" />
                     </Button>
                   </div>
                 </TableCell>
@@ -296,40 +429,42 @@ export default function ProductPage() {
       </Card>
 
       {filteredProducts.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 gap-4">
-          <Search className="h-12 w-12 text-muted-foreground" />
-          <h3 className="text-lg font-medium">No products found</h3>
-          <p className="text-muted-foreground">Try changing your search query</p>
+        <div className="flex flex-col items-center justify-center py-16 gap-4 text-gray-400">
+          <Search className="h-14 w-14 text-amber-500" />
+          <h3 className="text-xl font-medium">No Items Found</h3>
+          <p>Refine your search to explore your collection</p>
         </div>
       )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Confirm Deletion</DialogTitle>
+            <DialogTitle className="text-2xl text-amber-500">Confirm Removal</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Are you sure you want to delete this product? This action cannot be undone.</p>
+            <p className="text-gray-200">
+              Are you certain you wish to remove this item from your collection? This action is permanent.
+            </p>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
-              className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+              className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 transition-colors duration-200"
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => handleDelete(productToDelete)}
-              className="bg-red-600 hover:bg-red-700"
+            <Button
+              variant="destructive"
+              onClick={() => handleDelete(productToDelete!)}
+              className="bg-red-600 hover:bg-red-700 hover:scale-105 transition-transform duration-200"
             >
-              Delete
+              Remove
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

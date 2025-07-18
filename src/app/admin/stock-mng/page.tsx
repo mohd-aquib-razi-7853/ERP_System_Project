@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,6 @@ import {
   Trash2,
   Filter,
   Loader2,
-  X,
   Check,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +58,7 @@ type StockItem = {
 
 export default function StockManagementPage() {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<String>("All");
+  const [category, setCategory] = useState<string>("All");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -119,6 +118,7 @@ export default function StockManagementPage() {
         ];
         setStockItems(mockData);
       } catch (error) {
+        console.error(error)
         toast("Failed to load stock items");
       } finally {
         setIsLoading(false);
@@ -126,7 +126,7 @@ export default function StockManagementPage() {
     };
 
     fetchData();
-  }, [toast]);
+  }, []);
 
   // Calculate status based on quantity and threshold
   const calculateStatus = (quantity: number, threshold: number) => {
@@ -178,6 +178,7 @@ export default function StockManagementPage() {
 
       toast("Item added successfully");
     } catch (error) {
+      console.error(error)
       toast("Failed to add item");
     } finally {
       setIsLoading(false);
@@ -209,6 +210,7 @@ export default function StockManagementPage() {
  "Item updated successfully",
       );
     } catch (error) {
+      console.error(error)
       toast(
        
  "Failed to update item",
@@ -234,6 +236,7 @@ export default function StockManagementPage() {
          "Item deleted successfully",
 );
     } catch (error) {
+      console.error(error)
       toast(
          "Failed to delete item",
       );

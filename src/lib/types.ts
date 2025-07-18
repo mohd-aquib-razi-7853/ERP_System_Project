@@ -134,7 +134,7 @@ export interface BankTransaction {
   toAccount?: string;
 }
 
-interface Tax {
+export interface Tax {
   _id: string;
   name: string;
   rate: number;
@@ -377,5 +377,5 @@ export interface AuditLog {
   action: string;
   module: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string,string>;
 }

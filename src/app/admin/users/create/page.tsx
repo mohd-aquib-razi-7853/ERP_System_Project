@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   User, 
-  Mail, 
   Shield, 
   Edit, 
   Check, 
@@ -20,7 +19,6 @@ import {
   MapPin,
   Hash,
   ChevronDown,
-  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

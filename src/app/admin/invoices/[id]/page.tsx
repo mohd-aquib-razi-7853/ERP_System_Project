@@ -19,7 +19,6 @@ import {
   ArrowLeftIcon,
   MoreVerticalIcon,
   CalendarIcon,
-  UserIcon,
   FileTextIcon,
   CreditCardIcon,
   TruckIcon,

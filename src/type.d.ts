@@ -1,4 +1,4 @@
-import { LucideIcon } from "lucide-react";
+// import { LucideIcon } from "lucide-react";
 
 export interface MenuItem {
   title: string;
@@ -79,7 +79,7 @@ export interface InventoryReport {
   name: string;
   type: 'Stock Level' | 'Valuation' | 'Movement' | 'Aging';
   dateGenerated: Date;
-  parameters: Record<string, any>;
+  parameters: Record<string, string>;
   downloadUrl?: string;
 }
 

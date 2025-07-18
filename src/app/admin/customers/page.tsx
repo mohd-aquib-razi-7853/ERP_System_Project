@@ -19,7 +19,6 @@ import {
   MapPin,
   ShoppingBag,
   CreditCard,
-  Calendar,
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,8 +40,6 @@ import {
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   AlertDialog,

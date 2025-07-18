@@ -9,8 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   ArrowUp, 
   Crown, 
-  CheckCircle, 
-  Clock, 
   Star, 
   TrendingUp, 
   Package, 
@@ -747,7 +745,7 @@ const Dashboard: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            Welcome back! Here's what's happening with your store today.
+            Welcome back! Here&apose;s what&apose;s happening with your store today.
           </motion.p>
         </div>
         <motion.div 

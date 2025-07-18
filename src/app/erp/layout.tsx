@@ -1,7 +1,6 @@
 import React from "react";
 import { ERPSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { ContactRound, Home, Landmark, LayoutDashboard, LineChart, Settings, Users, Warehouse } from "lucide-react";
 import { MenuItem } from "@/type";
 const erpSidebarItems:MenuItem[] = [
   {
