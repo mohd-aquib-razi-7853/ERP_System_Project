@@ -32,7 +32,7 @@ import {
 import { useRouter } from "next/navigation";
 interface PageProps {
   params: {
-    id: string;
+    id: number;
   };
   searchParams?: {
     [key: string]: string | string[] | undefined;

@@ -58,7 +58,7 @@ export default function InvoicePage() {
   // Sample invoice data
   const invoices = [
     {
-      id: 'INV-001',
+      id: 1,
       customer: 'Acme Corporation',
       date: new Date('2023-06-15'),
       dueDate: new Date('2023-07-15'),
@@ -67,7 +67,7 @@ export default function InvoicePage() {
       items: 3
     },
     {
-      id: 'INV-002',
+      id: 2,
       customer: 'Globex Inc.',
       date: new Date('2023-06-18'),
       dueDate: new Date('2023-07-18'),
@@ -76,7 +76,7 @@ export default function InvoicePage() {
       items: 5
     },
     {
-      id: 'INV-003',
+      id: 3,
       customer: 'Soylent Corp',
       date: new Date('2023-06-20'),
       dueDate: new Date('2023-07-20'),
@@ -85,7 +85,7 @@ export default function InvoicePage() {
       items: 2
     },
     {
-      id: 'INV-004',
+      id: 4,
       customer: 'Initech LLC',
       date: new Date('2023-06-22'),
       dueDate: new Date('2023-07-22'),
@@ -94,7 +94,7 @@ export default function InvoicePage() {
       items: 4
     },
     {
-      id: 'INV-005',
+      id: 5,
       customer: 'Umbrella Corp',
       date: new Date('2023-06-25'),
       dueDate: new Date('2023-07-25'),
@@ -106,7 +106,7 @@ export default function InvoicePage() {
 
   // Filter invoices
   const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = invoice.id || 
                          invoice.customer.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
     const matchesDate = (!dateFilter.from || invoice.date >= dateFilter.from) && 
