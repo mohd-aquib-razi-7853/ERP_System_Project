@@ -194,16 +194,16 @@ export default function ProductPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
         <div>
-          <h2 className="text-4xl font-bold tracking-tight text-amber-500">
+          <h2 className="text-4xl font-bold tracking-tight text-white">
             Product Inventory
           </h2>
-          <p className="text-gray-300 mt-1">
+          <p className="text-gray-400 mt-1">
             Exquisite Management for Exclusive Assets
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-200" />
             <Input
               placeholder="Search your exclusive collection..."
               className="pl-10 w-full md:w-[320px] bg-gray-900 border-gray-700 text-white focus:border-amber-500 transition-all duration-300 rounded-lg"
@@ -220,13 +220,13 @@ export default function ProductPage() {
             }}
           >
             <DialogTrigger asChild>
-              <Button className="flex gap-2 bg-amber-600 hover:bg-amber-700 hover:scale-105 transition-transform duration-200 shadow-md">
+              <Button className="flex gap-2 bg-indigo-600 hover:bg-indigo-500 hover:scale-105 transition-transform duration-200 shadow-md">
                 <Plus size={20} /> Add Exclusive Item
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl text-amber-500">
+                <DialogTitle className="text-2xl text-white">
                   {form.id ? "Refine Item Details" : "Curate New Luxury Item"}
                 </DialogTitle>
               </DialogHeader>
@@ -296,7 +296,7 @@ export default function ProductPage() {
                 </Button>
                 <Button
                   onClick={handleAddProduct}
-                  className="bg-amber-600 hover:bg-amber-700 hover:scale-105 transition-transform duration-200"
+                  className="bg-indigo-600 hover:bg-indigo-500 hover:scale-105 transition-transform duration-200"
                 >
                   {form.id ? "Update Item" : "Add Item"}
                 </Button>
@@ -311,30 +311,30 @@ export default function ProductPage() {
         <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transição-all duration-300 rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Total Assets</CardTitle>
-            <Plus className="h-5 w-5 text-amber-500" />
+            <Plus className="h-5 w-5 text-white" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-500">{totalProducts}</div>
+            <div className="text-3xl font-bold text-white">{totalProducts}</div>
             <p className="text-xs text-gray-400">+2 from last month</p>
           </CardContent>
         </Card>
         <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transição-all duration-300 rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Inventory Volume</CardTitle>
-            <Box className="h-5 w-5 text-amber-500" />
+            <Box className="h-5 w-5 text-white" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-500">{totalStock}</div>
+            <div className="text-3xl font-bold text-white">{totalStock}</div>
             <p className="text-xs text-gray-400">+120 from last month</p>
           </CardContent>
         </Card>
         <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transição-all duration-300 rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-200">Out of Stock</CardTitle>
-            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <AlertCircle className="h-5 w-5 text-white" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-500">{outOfStock}</div>
+            <div className="text-3xl font-bold text-white">{outOfStock}</div>
             <p className="text-xs text-gray-400">+1 from last month</p>
           </CardContent>
         </Card>
@@ -363,9 +363,9 @@ export default function ProductPage() {
                 className="hover:bg-gray-800 transition-colors duration-200 border-b border-gray-800"
               >
                 <TableCell>
-                  <Avatar className="h-12 w-12 rounded-md ring-2 ring-amber-500 hover:ring-amber-400 transition-all duration-200">
+                  <Avatar className="h-12 w-12 rounded-md  transition-all duration-200">
                     <AvatarImage src={product.image} alt={product.name} />
-                    <AvatarFallback className="bg-gray-700 text-amber-500">
+                    <AvatarFallback className="bg-gray-700 text-white">
                       {product.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
@@ -374,7 +374,7 @@ export default function ProductPage() {
                 <TableCell>
                   <Badge
                     variant="outline"
-                    className="bg-gray-800 border-gray-600 text-amber-500"
+                    className="bg-gray-800 border-gray-600 text-white"
                   >
                     {product.sku}
                   </Badge>
@@ -394,7 +394,7 @@ export default function ProductPage() {
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className="bg-gray-700 text-amber-500"
+                    className="bg-gray-700 text-white"
                   >
                     {product.category}
                   </Badge>
@@ -407,7 +407,7 @@ export default function ProductPage() {
                       className="h-9 w-9 hover:bg-gray-700 hover:text-amber-400 transition-colors duration-200"
                       onClick={() => handleEdit(product)}
                     >
-                      <Pencil className="h-5 w-5 text-amber-500" />
+                      <Pencil className="h-5 w-5 text-white" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -430,7 +430,7 @@ export default function ProductPage() {
 
       {filteredProducts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 gap-4 text-gray-400">
-          <Search className="h-14 w-14 text-amber-500" />
+          <Search className="h-14 w-14 text-white" />
           <h3 className="text-xl font-medium">No Items Found</h3>
           <p>Refine your search to explore your collection</p>
         </div>
@@ -440,7 +440,7 @@ export default function ProductPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-amber-500">Confirm Removal</DialogTitle>
+            <DialogTitle className="text-2xl text-white">Confirm Removal</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-200">
