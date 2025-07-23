@@ -18,11 +18,15 @@ import {
   Database,
   PieChart,
   Shield,
+  Menu,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -45,10 +49,37 @@ type MenuSection = {
   key?: string;
 };
 
-export default function AdminSidebar() {
+type AdminSidebarProps = {
+  className?: string;
+};
+
+export default function AdminSidebar({ className }: AdminSidebarProps) {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-  const [, setIsHovered] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  const isMobile = useIsMobile();
+  const isTablet = useMediaQuery('(max-width: 1024px)');
+  const isSmallScreen = isMobile || isTablet;
+  
+  // Initialize sidebar state based on screen size
+  useEffect(() => {
+    // On mobile, start with sidebar closed
+    // On desktop, start with sidebar open
+    setIsSidebarOpen(!isSmallScreen);
+  }, [isSmallScreen]);
+  
+  // Close sidebar when navigating on mobile
+  useEffect(() => {
+    if (isSmallScreen) {
+      setIsSidebarOpen(false);
+    }
+  }, [pathname, isSmallScreen]);
+  
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen(prev => !prev);
+  }, []);
 
   const menuSections:MenuSection[] = useMemo(() => [
     {
@@ -141,22 +172,59 @@ export default function AdminSidebar() {
   };
 
   return (
-    <motion.aside 
-      className="h-screen w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col border-r border-gray-700"
-      initial={{ x: -50, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-    >
+    <>
+      {/* Mobile Menu Toggle Button - Bottom right corner, only visible when needed */}
+      {isSmallScreen && (
+        <motion.button
+          className="fixed bottom-4 right-4 z-[100] p-1.5 rounded-full bg-blue-600 text-white shadow-lg flex items-center justify-center"
+          onClick={toggleSidebar}
+          initial={{ scale: 0 }}
+          animate={{ 
+            scale: 1,
+            opacity: 1
+          }}
+          exit={{ scale: 0, opacity: 0 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Menu size={16} />
+        </motion.button>
+      )}
+      
+      {/* Backdrop for mobile - only visible when sidebar is open */}
+      {isSmallScreen && isSidebarOpen && (
+        <motion.div 
+          className="fixed inset-0 bg-black/50 z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={toggleSidebar}
+        />
+      )}
+      
+      <motion.aside 
+        className={cn(
+          "h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col border-r border-gray-700 z-50",
+          isSmallScreen ? "fixed" : "relative",
+          isSmallScreen ? "w-[280px]" : "w-64",
+          className
+        )}
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ 
+          x: isSmallScreen && !isSidebarOpen ? -280 : 0, 
+          opacity: isSmallScreen && !isSidebarOpen ? 0 : 1
+        }}
+        transition={{ duration: 0.3 }}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
+      >
       {/* Logo/Header with animation */}
       <motion.div 
-        className="p-6 border-b border-gray-700"
+        className="p-6 border-b border-gray-700 flex items-center justify-between"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Link href="/admin/dashboard" className="flex items-center gap-3">
+        <Link href="/admin/dashboard" className="flex items-center gap-3 flex-1">
           <motion.div
             className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center"
             whileHover={{ rotate: 5, scale: 1.05 }}
@@ -175,9 +243,22 @@ export default function AdminSidebar() {
             <div className="text-xs text-gray-400">Enterprise Platform</div>
           </motion.div>
         </Link>
+        
+        {/* Close button for mobile */}
+        {isSmallScreen && isSidebarOpen && (
+          <motion.button
+            onClick={toggleSidebar}
+            className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700/50"
+            whileTap={{ scale: 0.9 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <X size={18} />
+          </motion.button>
+        )}
       </motion.div>
 
-      <ScrollArea className="flex-1 overflow-y-auto">
+      <ScrollArea className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="p-4 flex flex-col gap-1">
           {menuSections.map((section, index) => {
             if (section.singleItem) {
@@ -376,5 +457,6 @@ export default function AdminSidebar() {
         </div>
       </motion.div>
     </motion.aside>
+    </>
   );
 }

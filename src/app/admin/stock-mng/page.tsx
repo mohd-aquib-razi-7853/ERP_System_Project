@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,12 @@ import {
   Filter,
   Loader2,
   Check,
+  Download,
+  ChevronDown,
+  ChevronUp,
+  Box,
+  AlertCircle,
+  Package,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,6 +50,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type StockItem = {
   id: string;
@@ -54,20 +62,27 @@ type StockItem = {
   status: "In Stock" | "Low Stock" | "Out of Stock";
   lastUpdated: string;
   description?: string;
+  image?: string;
+};
+
+type SortConfig = {
+  key: keyof StockItem;
+  direction: 'ascending' | 'descending';
 };
 
 export default function StockManagementPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<string>("");
   const [category, setCategory] = useState<string>("All");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [openViewDialog, setOpenViewDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
+  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
+  const [openViewDialog, setOpenViewDialog] = useState<boolean>(false);
+  const [openAddDialog, setOpenAddDialog] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [formData, setFormData] = useState<
-    Omit<StockItem, "id" | "status" | "lastUpdated">
+    Omit<StockItem, "id" | "status" | "lastUpdated" | "image">
   >({
     name: "",
     category: "",
@@ -75,6 +90,7 @@ export default function StockManagementPage() {
     threshold: 5,
     description: "",
   });
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -92,6 +108,7 @@ export default function StockManagementPage() {
             status: "In Stock",
             lastUpdated: new Date().toISOString().split("T")[0],
             description: "High-quality steel rods for construction",
+            image: "/steel-rod.jpg",
           },
           {
             id: "2",
@@ -103,6 +120,7 @@ export default function StockManagementPage() {
             lastUpdated: new Date(Date.now() - 86400000 * 7)
               .toISOString()
               .split("T")[0],
+            image: "/welding-machine.jpg",
           },
           {
             id: "3",
@@ -114,12 +132,37 @@ export default function StockManagementPage() {
             lastUpdated: new Date(Date.now() - 86400000 * 3)
               .toISOString()
               .split("T")[0],
+            image: "/safety-helmet.jpg",
+          },
+          {
+            id: "4",
+            name: "Concrete Mix",
+            category: "Raw Material",
+            quantity: 42,
+            threshold: 20,
+            status: "In Stock",
+            lastUpdated: new Date(Date.now() - 86400000 * 2)
+              .toISOString()
+              .split("T")[0],
+            image: "/concrete-mix.jpg",
+          },
+          {
+            id: "5",
+            name: "Power Drill",
+            category: "Tool",
+            quantity: 8,
+            threshold: 5,
+            status: "In Stock",
+            lastUpdated: new Date(Date.now() - 86400000 * 1)
+              .toISOString()
+              .split("T")[0],
+            image: "/power-drill.jpg",
           },
         ];
         setStockItems(mockData);
       } catch (error) {
-        console.error(error)
-        toast("Failed to load stock items");
+        console.error(error);
+        toast.error("Failed to load stock items");
       } finally {
         setIsLoading(false);
       }
@@ -128,15 +171,40 @@ export default function StockManagementPage() {
     fetchData();
   }, []);
 
+  // Sort items
+  const requestSort = (key: keyof StockItem) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig?.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedItems = [...stockItems].sort((a, b) => {
+    if (!sortConfig) return 0;
+    
+    const aValue = a[sortConfig.key];
+    const bValue = b[sortConfig.key];
+    if (aValue !== undefined && bValue !== undefined) {
+      if (aValue < bValue) {
+        return sortConfig.direction === 'ascending' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'ascending' ? 1 : -1;
+      }
+    }
+    return 0;
+  });
+
   // Calculate status based on quantity and threshold
-  const calculateStatus = (quantity: number, threshold: number) => {
+  const calculateStatus = (quantity: number, threshold: number): "In Stock" | "Low Stock" | "Out of Stock" => {
     if (quantity <= 0) return "Out of Stock";
     if (quantity <= threshold) return "Low Stock";
     return "In Stock";
   };
 
   // Filter items based on search and category
-  const filteredItems = stockItems.filter(
+  const filteredItems = sortedItems.filter(
     (item) =>
       item.name.toLowerCase().includes(search.toLowerCase()) &&
       (category === "All" || item.category === category)
@@ -154,6 +222,18 @@ export default function StockManagementPage() {
     }));
   };
 
+  // Reset form when dialog closes
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      category: "",
+      quantity: 0,
+      threshold: 5,
+      description: "",
+    });
+    setSelectedItem(null);
+  };
+
   // Handle form submission for adding new item
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,21 +245,16 @@ export default function StockManagementPage() {
         ...formData,
         status: calculateStatus(formData.quantity, formData.threshold),
         lastUpdated: new Date().toISOString().split("T")[0],
+        image: "/placeholder-item.jpg",
       };
 
       setStockItems((prev) => [...prev, newItem]);
-      setFormData({
-        name: "",
-        category: "",
-        quantity: 0,
-        threshold: 5,
-        description: "",
-      });
-
-      toast("Item added successfully");
+      resetForm();
+      setOpenAddDialog(false);
+      toast.success("Item added successfully");
     } catch (error) {
-      console.error(error)
-      toast("Failed to add item");
+      console.error(error);
+      toast.error("Failed to add item");
     } finally {
       setIsLoading(false);
     }
@@ -193,7 +268,7 @@ export default function StockManagementPage() {
     setIsLoading(true);
 
     try {
-      const updatedItem = {
+      const updatedItem: StockItem = {
         ...selectedItem,
         ...formData,
         status: calculateStatus(formData.quantity, formData.threshold),
@@ -205,16 +280,11 @@ export default function StockManagementPage() {
       );
 
       setOpenEditDialog(false);
-      toast(
-        
- "Item updated successfully",
-      );
+      resetForm();
+      toast.success("Item updated successfully");
     } catch (error) {
-      console.error(error)
-      toast(
-       
- "Failed to update item",
-      );
+      console.error(error);
+      toast.error("Failed to update item");
     } finally {
       setIsLoading(false);
     }
@@ -231,15 +301,10 @@ export default function StockManagementPage() {
         prev.filter((item) => item.id !== selectedItem.id)
       );
       setOpenDeleteDialog(false);
-      toast(
-       
-         "Item deleted successfully",
-);
+      toast.success("Item deleted successfully");
     } catch (error) {
-      console.error(error)
-      toast(
-         "Failed to delete item",
-      );
+      console.error(error);
+      toast.error("Failed to delete item");
     } finally {
       setIsDeleting(false);
     }
@@ -258,48 +323,68 @@ export default function StockManagementPage() {
     setOpenEditDialog(true);
   };
 
+  // Status counts for summary cards
+  const statusCounts = {
+    inStock: stockItems.filter(item => item.status === "In Stock").length,
+    lowStock: stockItems.filter(item => item.status === "Low Stock").length,
+    outOfStock: stockItems.filter(item => item.status === "Out of Stock").length,
+  };
+
+  const totalQuantity = stockItems.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
-    <div className="p-6 space-y-6 bg-gray-900 h-screen overflow-scroll no-scrollbar text-white">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold  text-white">
-          Stock Management
-        </h1>
-        <div className="flex items-center space-x-4">
-          <Dialog>
+    <div className="p-8 space-y-8 bg-gray-950 text-white h-screen overflow-scroll no-scrollbar font-['Inter',sans-serif]">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 ">
+        <div>
+          <h2 className="text-4xl font-bold tracking-tight text-white">
+            Premium Stock Inventory
+          </h2>
+          <p className="text-gray-400 mt-1">
+            Elite Management for Exclusive Materials
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-200" />
+            <Input
+              placeholder="Search your premium materials..."
+              className="pl-10 w-full md:w-[320px] bg-gray-900 border-gray-700 text-white focus:border-amber-500 transition-all duration-300 rounded-lg"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          {/* Add Item Dialog */}
+          <Dialog open={openAddDialog} onOpenChange={(open) => {
+            if (!open) resetForm();
+            setOpenAddDialog(open);
+          }}>
             <DialogTrigger asChild>
-              <Button
-                variant="default"
-                className="bg-indigo-600 hover:bg-indigo-700"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Stock
+              <Button className="flex gap-2 bg-indigo-600 hover:bg-indigo-500 hover:scale-105 transition-transform duration-200 shadow-md">
+                <Plus size={20} /> Add Premium Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] rounded-lg bg-gray-900 text-gray-200 ">
+            <DialogContent className="sm:max-w-[600px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
               <DialogHeader>
-                <DialogTitle className="text-xl">
-                  Add New Stock Item
+                <DialogTitle className="text-2xl text-white">
+                  Add Premium Stock
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddItem} className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      Item Name *
-                    </label>
+                    <label className="text-sm font-medium text-gray-200">Item Name *</label>
                     <Input
                       name="name"
-                      placeholder="Enter item name"
-                      className="rounded-lg"
+                      placeholder="Steel Rod"
+                      className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                       value={formData.name}
                       onChange={handleInputChange}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      Category *
-                    </label>
+                    <label className="text-sm font-medium text-gray-200">Category *</label>
                     <Select
                       name="category"
                       value={formData.category}
@@ -308,30 +393,26 @@ export default function StockManagementPage() {
                       }
                       required
                     >
-                      <SelectTrigger className="rounded-lg">
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white focus:border-amber-500">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Raw Material">
-                          Raw Material
-                        </SelectItem>
-                        <SelectItem value="Tool">Tool</SelectItem>
-                        <SelectItem value="Safety">Safety</SelectItem>
-                        <SelectItem value="Equipment">Equipment</SelectItem>
+                      <SelectContent className="bg-gray-800 border-gray-600 text-white">
+                        <SelectItem value="Raw Material" className="hover:bg-gray-700">Raw Material</SelectItem>
+                        <SelectItem value="Tool" className="hover:bg-gray-700">Tool</SelectItem>
+                        <SelectItem value="Safety" className="hover:bg-gray-700">Safety</SelectItem>
+                        <SelectItem value="Equipment" className="hover:bg-gray-700">Equipment</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      Quantity *
-                    </label>
+                    <label className="text-sm font-medium text-gray-200">Quantity *</label>
                     <Input
                       name="quantity"
-                      placeholder="Enter quantity"
                       type="number"
-                      className="rounded-lg"
+                      placeholder="250"
+                      className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                       value={formData.quantity}
                       onChange={handleInputChange}
                       min="0"
@@ -339,14 +420,12 @@ export default function StockManagementPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      Low Stock Threshold *
-                    </label>
+                    <label className="text-sm font-medium text-gray-200">Threshold *</label>
                     <Input
                       name="threshold"
-                      placeholder="Set low stock threshold"
                       type="number"
-                      className="rounded-lg"
+                      placeholder="10"
+                      className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                       value={formData.threshold}
                       onChange={handleInputChange}
                       min="1"
@@ -355,21 +434,29 @@ export default function StockManagementPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">
-                    Description
-                  </label>
+                  <label className="text-sm font-medium text-gray-200">Description</label>
                   <Input
                     name="description"
-                    placeholder="Enter description (optional)"
-                    className="rounded-lg"
+                    placeholder="High-quality materials..."
+                    className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                     value={formData.description}
                     onChange={handleInputChange}
                   />
                 </div>
                 <DialogFooter>
                   <Button
+                    variant="outline"
+                    onClick={() => {
+                      resetForm();
+                      setOpenAddDialog(false);
+                    }}
+                    className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 transition-colors duration-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 rounded-lg"
+                    className="bg-indigo-600 hover:bg-indigo-500 hover:scale-105 transition-transform duration-200"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -386,241 +473,248 @@ export default function StockManagementPage() {
         </div>
       </div>
 
-      <Card className="border-1 shadow-sm bg-gray-900 text-white">
-        <CardHeader className="py-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center space-x-4">
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search stock items..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 rounded-lg  bg-gray-800"
-                />
-              </div>
-              <Select value={category} onValueChange={setCategory} defaultValue="All Categories">
-                <SelectTrigger className="w-[200px] rounded-lg bg-gray-800">
-                  <div className="flex items-center space-x-2">
-                    <Filter className="h-4 w-4 text-gray-500" />
-                    <SelectValue placeholder="All Categories"   />
+      {/* Inventory Summary Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-200">Total Items</CardTitle>
+            <Package className="h-5 w-5 text-white" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">{stockItems.length}</div>
+            <p className="text-xs text-gray-400">+3 from last month</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-200">Total Quantity</CardTitle>
+            <Box className="h-5 w-5 text-white" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">{totalQuantity}</div>
+            <p className="text-xs text-gray-400">+120 from last month</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gray-900 border-gray-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-200">Out of Stock</CardTitle>
+            <AlertCircle className="h-5 w-5 text-white" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-white">{statusCounts.outOfStock}</div>
+            <p className="text-xs text-gray-400">+1 from last month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <hr className="my-8 border-gray-800" />
+
+      {/* Stock Table */}
+      <Card className="border-none bg-gray-900 text-white shadow-lg rounded-xl">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-gray-700 hover:bg-gray-900">
+              <TableHead className="w-[100px] text-gray-300 font-semibold">Image</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Item</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Category</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Quantity</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Status</TableHead>
+              <TableHead className="text-gray-300 font-semibold">Last Updated</TableHead>
+              <TableHead className="text-right text-gray-300 font-semibold">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-400" />
+                    <span className="text-gray-400">Loading inventory...</span>
                   </div>
-                </SelectTrigger>
-                <SelectContent className="rounded-lg">
-                  <SelectItem value="All">All Categories</SelectItem>
-                  <SelectItem value="Raw Material">Raw Material</SelectItem>
-                  <SelectItem value="Tool">Tool</SelectItem>
-                  <SelectItem value="Safety">Safety</SelectItem>
-                  <SelectItem value="Equipment">Equipment</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button variant="outline" className="rounded-lg bg-transparent hover:bg-gray-800 hover:text-white ">
-              Export
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-gray-800">
-              <TableRow className="">
-                <TableHead className="font-medium text-gray-300">Item</TableHead>
-                <TableHead className="font-medium text-gray-300">Category</TableHead>
-                <TableHead className="font-medium text-gray-300">Quantity</TableHead>
-                <TableHead className="font-medium text-gray-300">Status</TableHead>
-                <TableHead className="font-medium text-gray-300">Last Updated</TableHead>
-                <TableHead className="font-medium text-gray-300 text-right">
-                  Actions
-                </TableHead>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    <div className="flex items-center justify-center space-x-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Loading inventory...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : filteredItems.length > 0 ? (
-                filteredItems.map((item) => (
-                  <TableRow key={item.id} className="border-t">
-                    <TableCell className="font-medium">{item.name}</TableCell>
+            ) : filteredItems.length > 0 ? (
+              <AnimatePresence>
+                {filteredItems.map((item) => (
+                  <motion.tr
+                    key={item.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="hover:bg-gray-800 transition-colors duration-200 border-b border-gray-800"
+                  >
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
+                      <Avatar className="h-12 w-12 rounded-md transition-all duration-200">
+                        <AvatarImage src={item.image} alt={item.name} />
+                        <AvatarFallback className="bg-gray-700 text-white">
+                          {item.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TableCell>
+                    <TableCell className="font-medium text-gray-100">{item.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-gray-800 border-gray-600 text-white">
                         {item.category}
                       </Badge>
                     </TableCell>
-                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell className="text-gray-100">{item.quantity}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
                           item.status === "In Stock"
                             ? "default"
                             : item.status === "Low Stock"
-                            ? "warning"
+                            ? "outline"
                             : "destructive"
                         }
-                        className="text-xs"
+                        className="px-2 py-1 text-xs text-white"
                       >
                         {item.status}
+                        {item.status === "Low Stock" && (
+                          <AlertCircle className="h-3 w-3 ml-1 text-amber-500" />
+                        )}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-500 text-sm">
+                    <TableCell className="text-gray-400 text-sm">
                       {item.lastUpdated}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-lg"
-                              onClick={() => {
-                                setSelectedItem(item);
-                                setOpenViewDialog(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>View Details</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-lg"
-                              onClick={() => prepareEditForm(item)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit Item</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600"
-                              onClick={() => {
-                                setSelectedItem(item);
-                                setOpenDeleteDialog(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Delete Item</TooltipContent>
-                        </Tooltip>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 hover:bg-gray-700 hover:text-amber-400 transition-colors duration-200"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setOpenViewDialog(true);
+                          }}
+                        >
+                          <Eye className="h-5 w-5 text-white" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 hover:bg-gray-700 hover:text-blue-400 transition-colors duration-200"
+                          onClick={() => prepareEditForm(item)}
+                        >
+                          <Pencil className="h-5 w-5 text-white" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 hover:bg-gray-700 hover:text-red-400 transition-colors duration-200"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setOpenDeleteDialog(true);
+                          }}
+                        >
+                          <Trash2 className="h-5 w-5 text-red-500" />
+                        </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell
-                    colSpan={6}
-                    className="h-24 text-center text-gray-500"
-                  >
-                    No items found.{" "}
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            ) : (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={7}
+                  className="h-24 text-center text-gray-400"
+                >
+                  <div className="flex flex-col items-center justify-center py-8 gap-4">
+                    <Search className="h-14 w-14 text-gray-500" />
+                    <h3 className="text-xl font-medium">No Items Found</h3>
+                    <p>Adjust your search to find your materials</p>
                     {search && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="ml-2"
                         onClick={() => {
                           setSearch("");
-                          setCategory("");
+                          setCategory("All");
                         }}
                       >
                         Clear filters
                       </Button>
                     )}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       {/* View Item Dialog */}
       <Dialog open={openViewDialog} onOpenChange={setOpenViewDialog}>
-        <DialogContent className="sm:max-w-[600px] rounded-lg">
+        <DialogContent className="sm:max-w-[600px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">Item Details</DialogTitle>
+            <DialogTitle className="text-2xl text-white">
+              {selectedItem?.name} Details
+            </DialogTitle>
           </DialogHeader>
           {selectedItem && (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6 py-4">
+              <div className="flex items-center justify-center">
+                <Avatar className="h-32 w-32 rounded-lg">
+                  <AvatarImage src={selectedItem.image} alt={selectedItem.name} />
+                  <AvatarFallback className="bg-gray-700 text-white text-4xl">
+                    {selectedItem.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Item Name
-                  </h3>
-                  <p className="mt-1 text-sm">{selectedItem.name}</p>
+                  <h3 className="text-sm font-medium text-gray-400">Item Name</h3>
+                  <p className="mt-1 text-lg font-medium">{selectedItem.name}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Category
-                  </h3>
-                  <p className="mt-1 text-sm">
-                    <Badge variant="outline" className="text-xs">
+                  <h3 className="text-sm font-medium text-gray-400">Category</h3>
+                  <p className="mt-1">
+                    <Badge variant="outline" className="bg-gray-800 border-gray-600 text-white">
                       {selectedItem.category}
                     </Badge>
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Current Quantity
-                  </h3>
-                  <p className="mt-1 text-sm">{selectedItem.quantity}</p>
+                  <h3 className="text-sm font-medium text-gray-400">Current Quantity</h3>
+                  <p className="mt-1 text-lg font-medium">{selectedItem.quantity}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Low Stock Threshold
-                  </h3>
-                  <p className="mt-1 text-sm">{selectedItem.threshold}</p>
+                  <h3 className="text-sm font-medium text-gray-400">Threshold</h3>
+                  <p className="mt-1 text-lg font-medium">{selectedItem.threshold}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                  <p className="mt-1 text-sm">
+                  <h3 className="text-sm font-medium text-gray-400">Status</h3>
+                  <p className="mt-1">
                     <Badge
                       variant={
                         selectedItem.status === "In Stock"
                           ? "default"
                           : selectedItem.status === "Low Stock"
-                          ? "warning"
+                          ? "outline"
                           : "destructive"
                       }
-                      className="text-xs"
+                      className="text-xs text-white"
                     >
                       {selectedItem.status}
                     </Badge>
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Last Updated
-                  </h3>
-                  <p className="mt-1 text-sm">{selectedItem.lastUpdated}</p>
+                  <h3 className="text-sm font-medium text-gray-400">Last Updated</h3>
+                  <p className="mt-1 text-lg font-medium">{selectedItem.lastUpdated}</p>
                 </div>
               </div>
               {selectedItem.description && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Description
-                  </h3>
-                  <p className="mt-1 text-sm  text-gray-300">
+                  <h3 className="text-sm font-medium text-gray-400">Description</h3>
+                  <p className="mt-1 text-gray-300">
                     {selectedItem.description}
                   </p>
                 </div>
@@ -631,30 +725,31 @@ export default function StockManagementPage() {
       </Dialog>
 
       {/* Edit Item Dialog */}
-      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-        <DialogContent className="sm:max-w-[600px] rounded-lg">
+      <Dialog open={openEditDialog} onOpenChange={(open) => {
+        if (!open) resetForm();
+        setOpenEditDialog(open);
+      }}>
+        <DialogContent className="sm:max-w-[600px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">Edit Stock Item</DialogTitle>
+            <DialogTitle className="text-2xl text-white">
+              Edit Item Details
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdateItem} className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
-                  Item Name *
-                </label>
+                <label className="text-sm font-medium text-gray-200">Item Name *</label>
                 <Input
                   name="name"
-                  placeholder="Enter item name"
-                  className="rounded-lg"
+                  placeholder="Steel Rod"
+                  className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   value={formData.name}
                   onChange={handleInputChange}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
-                  Category *
-                </label>
+                <label className="text-sm font-medium text-gray-200">Category *</label>
                 <Select
                   name="category"
                   value={formData.category}
@@ -663,28 +758,26 @@ export default function StockManagementPage() {
                   }
                   required
                 >
-                  <SelectTrigger className="rounded-lg">
+                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white focus:border-amber-500">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Raw Material">Raw Material</SelectItem>
-                    <SelectItem value="Tool">Tool</SelectItem>
-                    <SelectItem value="Safety">Safety</SelectItem>
-                    <SelectItem value="Equipment">Equipment</SelectItem>
+                  <SelectContent className="bg-gray-800 border-gray-600 text-white">
+                    <SelectItem value="Raw Material" className="hover:bg-gray-700">Raw Material</SelectItem>
+                    <SelectItem value="Tool" className="hover:bg-gray-700">Tool</SelectItem>
+                    <SelectItem value="Safety" className="hover:bg-gray-700">Safety</SelectItem>
+                    <SelectItem value="Equipment" className="hover:bg-gray-700">Equipment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
-                  Quantity *
-                </label>
+                <label className="text-sm font-medium text-gray-200">Quantity *</label>
                 <Input
                   name="quantity"
-                  placeholder="Enter quantity"
                   type="number"
-                  className="rounded-lg"
+                  placeholder="250"
+                  className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   value={formData.quantity}
                   onChange={handleInputChange}
                   min="0"
@@ -692,14 +785,12 @@ export default function StockManagementPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
-                  Low Stock Threshold *
-                </label>
+                <label className="text-sm font-medium text-gray-200">Threshold *</label>
                 <Input
                   name="threshold"
-                  placeholder="Set low stock threshold"
                   type="number"
-                  className="rounded-lg"
+                  placeholder="10"
+                  className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                   value={formData.threshold}
                   onChange={handleInputChange}
                   min="1"
@@ -708,21 +799,29 @@ export default function StockManagementPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">
-                Description
-              </label>
+              <label className="text-sm font-medium text-gray-200">Description</label>
               <Input
                 name="description"
-                placeholder="Enter description (optional)"
-                className="rounded-lg"
+                placeholder="High-quality materials..."
+                className="bg-gray-800 border-gray-600 text-white focus:border-amber-500 transition-all duration-300"
                 value={formData.description}
                 onChange={handleInputChange}
               />
             </div>
             <DialogFooter>
               <Button
+                variant="outline"
+                onClick={() => {
+                  resetForm();
+                  setOpenEditDialog(false);
+                }}
+                className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 transition-colors duration-200"
+              >
+                Cancel
+              </Button>
+              <Button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 rounded-lg"
+                className="bg-indigo-600 hover:bg-indigo-500 hover:scale-105 transition-transform duration-200"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -739,38 +838,36 @@ export default function StockManagementPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent className="sm:max-w-[425px] rounded-lg">
+        <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700 text-white shadow-lg rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-lg">Confirm Deletion</DialogTitle>
+            <DialogTitle className="text-2xl text-white">Confirm Removal</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className=" text-gray-300">
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">{selectedItem?.name}</span>? This
-              action cannot be undone.
+            <p className="text-gray-200">
+              Are you certain you wish to remove <span className="font-semibold text-white">{selectedItem?.name}</span> from your inventory? This action is permanent.
             </p>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setOpenDeleteDialog(false)}
-              className="rounded-lg"
+              className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 transition-colors duration-200"
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteItem}
-              className="rounded-lg"
+              className="bg-red-600 hover:bg-red-700 hover:scale-105 transition-transform duration-200"
               disabled={isDeleting}
             >
               {isDeleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
+                  Removing...
                 </>
               ) : (
-                "Delete"
+                "Remove"
               )}
             </Button>
           </DialogFooter>

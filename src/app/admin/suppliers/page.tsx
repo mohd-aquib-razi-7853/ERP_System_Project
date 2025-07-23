@@ -114,6 +114,8 @@ export default function SuppliersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentId, setCurrentId] = useState<number | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [currentSupplier, setCurrentSupplier] = useState<any>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -202,6 +204,11 @@ export default function SuppliersPage() {
     setDialogOpen(true);
   };
 
+  const handleViewDetails = (supplier: any) => {
+    setCurrentSupplier(supplier);
+    setViewDialogOpen(true);
+  };
+
   const resetForm = () => {
     setForm({
       name: "",
@@ -219,7 +226,7 @@ export default function SuppliersPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gray-950 text-gray-200 p-6 space-y-6"
+      className="h-screen bg-gray-950 text-gray-200 p-6 space-y-6 overflow-scroll no-scrollbar"
     >
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -247,7 +254,7 @@ export default function SuppliersPage() {
             }}
           >
             <DialogTrigger asChild>
-              <Button className="flex gap-2 bg-primary hover:bg-primary/90">
+              <Button className="flex gap-2 bg-indigo-600 hover:bg-indigo-500 hover:scale-105 transition-transform duration-200 shadow-md">
                 <Plus size={18} />
                 <span>Add Supplier</span>
               </Button>
@@ -632,7 +639,7 @@ export default function SuppliersPage() {
                         >
                           <DropdownMenuItem
                             className="flex items-center gap-2 hover:bg-gray-700 cursor-pointer"
-                            onClick={() => {}}
+                            onClick={() => handleViewDetails(supplier)}
                           >
                             <Eye size={14} className="text-gray-400" /> View
                             Details
@@ -677,6 +684,79 @@ export default function SuppliersPage() {
           </motion.div>
         )}
       </motion.div>
+
+      {/* View Details Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-gray-900 border-gray-800 text-gray-200">
+          {currentSupplier && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">
+                  {currentSupplier.name}
+                </DialogTitle>
+                <DialogDescription className="text-gray-400">
+                  Supplier Details
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Contact Information
+                  </label>
+                  <div className="bg-gray-800 p-4 rounded-lg">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-400">Phone</p>
+                        <p className="text-gray-200">{currentSupplier.contact}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">Email</p>
+                        <p className="text-primary-300">{currentSupplier.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Address
+                  </label>
+                  <div className="bg-gray-800 p-4 rounded-lg">
+                    <p className="text-gray-200">{currentSupplier.address}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Status
+                  </label>
+                  <div className="bg-gray-800 p-4 rounded-lg">
+                    <Badge
+                      className={`${
+                        statusVariants[
+                          currentSupplier.status as keyof typeof statusVariants
+                        ]
+                      } transition-colors`}
+                    >
+                      {currentSupplier.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  onClick={() => setViewDialogOpen(false)}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
