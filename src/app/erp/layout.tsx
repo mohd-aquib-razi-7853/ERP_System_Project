@@ -131,7 +131,7 @@ const MainRootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <ERPSidebar items={erpSidebarItems}/>
-      <main>
+      <main className="w-full h-screen overflow-scroll no-scrollbar">
         {children}
       </main>
     </SidebarProvider>
